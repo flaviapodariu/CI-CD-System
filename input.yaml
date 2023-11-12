@@ -1,10 +1,12 @@
 variables:
 - name: one
   value: initialValue 
+- name: two
+  value: secondValue
 
 steps:
   - script: |
-      echo ${{ variables.one }} 
+      echo ${{ variables.one }} ${{ variables.two }}
       echo $(one)
     displayName: First variable pass
   - bash: echo "##vso[task.setvariable variable=one]secondValue"
