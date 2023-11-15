@@ -18,9 +18,12 @@ class YamlFile():
             os.system(command)
 
     def expand_variables(self, script : str):
-        var_names = re.findall('(v[^}\s]+)', script)
-        properties = [self.get_variable_value(v) for v in var_names]
-        # re.sub(r'(v[^}\s]+)')
+        var_names = re.finditer('(v[^}\s]+)', script)
+        values = []
+        for name in var_names: 
+            print(name.span())
+            values.append(self.get_variable_value(name.group().split(".")[1])) 
+        print(values) 
     
     def get_variable_value(self, var_name):
         for pair in self.variables:
