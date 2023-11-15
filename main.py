@@ -12,18 +12,26 @@ class YamlFile():
     def run_step(self, step : Tuple[str, str]): 
         if step[0] == "script":
             instructions = step[1].strip().split("\n")
-            self.expand_variables(instructions[0])
-            var = self.get_variable_value("one")
-            command = instructions[0].split(" ")[0] + " " +  var
-            os.system(command)
+            command = self.expand_variables(instructions[0])
+            # var = self.get_variable_value("one")
+            os.system(command.strip())
 
-    def expand_variables(self, script : str):
+    def expand_variables(self, script : str) -> str:
         var_names = re.finditer('(v[^}\s]+)', script)
         values = []
         for name in var_names: 
             print(name.span())
-            values.append(self.get_variable_value(name.group().split(".")[1])) 
+                                           
+            values.append(( name.group(),self.get_variable_value(name.group().split(".")[1]), name.span()[0])) #(variable, value, start_pos) 
         print(values) 
+
+        for val in values: 
+            script = script.replace(val[0], val[1], 1)
+            
+        script = script.replace("${{ ", "")
+        script = script.replace("}}", "")
+        print(script)
+        return script 
     
     def get_variable_value(self, var_name):
         for pair in self.variables:
