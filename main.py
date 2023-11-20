@@ -8,7 +8,6 @@ class Job():
         self.variables = variables 
         self.steps = steps
 
-
     def run_step(self, step : Tuple[str, str]): 
         if step[0] == "script":
             instructions = step[1].strip().split("\n")
@@ -20,19 +19,20 @@ class Job():
         template_syntax_pattern ='\$\{\{[^}]*\}\}' 
         macro_syntax_pattern = '\$\([^)]*\)'
 
-        var_type = ""
+        template_vars = []
+        macro_vars = []
         if re.search(template_syntax_pattern, script):
-            var_names = re.finditer(template_syntax_pattern, script)
-            var_type = "template" 
+            template_vars = re.finditer(template_syntax_pattern, script)
         
-        elif re.search(macro_syntax_pattern, script):
-            var_names = re.finditer(macro_syntax_pattern, script)
-            var_type = "macro" 
+        if re.search(macro_syntax_pattern, script):
+            macro_vars = re.finditer(macro_syntax_pattern, script)
 
         values = []
-        for name in var_names: 
-            print(name.group())
-            values.append((name.group(), self.get_variable_value(name.group(), var_type))) #(variable, value) 
+        for name in template_vars: 
+            values.append((name.group(), self.get_variable_value(name.group(), "template"))) #(variable, value) 
+
+        for name in macro_vars: 
+            values.append((name.group(), self.get_variable_value(name.group(), "macro"))) #(variable, value) 
 
         for val in values: 
             script = script.replace(val[0], val[1], 1) 
@@ -43,12 +43,10 @@ class Job():
         if var_type == "template": 
             var_name = re.findall('\.\S*?(?=\s|\})', string_to_expand)
             var_name = var_name[0].replace(".", "") # findall returns a list so we only care about the first element 
-            print(var_name)
 
         elif var_type == "macro": 
             var_name = re.findall('\(([^)]*)\)', string_to_expand)
             var_name = var_name[0].strip()
-            print(var_name)
         for pair in self.variables:
             if pair["name"] == var_name:
                 return pair["value"]
