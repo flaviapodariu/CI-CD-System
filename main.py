@@ -3,7 +3,7 @@ from typing import Tuple, List, Dict
 import os
 import re
 
-class YamlFile(): 
+class Job(): 
     def __init__(self, variables: List[Dict[str, str]], steps) -> None:
         self.variables = variables 
         self.steps = steps
@@ -61,7 +61,7 @@ steps = list(file["steps"][0].items())
 
 
 
-inputFile = YamlFile(file["variables"], file["steps"])
+inputFile = Job(file["variables"], file["steps"])
 
 inputFile.run_step(steps[0])
 
