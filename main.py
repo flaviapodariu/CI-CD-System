@@ -17,40 +17,48 @@ class YamlFile():
             os.system(command.strip())
 
     def expand_variables(self, script : str) -> str:
-        var_names = re.finditer('(v[^}\s]+)', script)
+        template_syntax_pattern ='\$\{\{[^}]*\}\}' 
+        macro_syntax_pattern = '\$\([^)]*\)'
+
+        var_type = ""
+        if re.search(template_syntax_pattern, script):
+            var_names = re.finditer(template_syntax_pattern, script)
+            var_type = "template" 
+        
+        elif re.search(macro_syntax_pattern, script):
+            var_names = re.finditer(macro_syntax_pattern, script)
+            var_type = "macro" 
+
         values = []
         for name in var_names: 
-            print(name.span())
-                                           
-            values.append(( name.group(),self.get_variable_value(name.group().split(".")[1]), name.span()[0])) #(variable, value, start_pos) 
-        print(values) 
+            print(name.group())
+            values.append((name.group(), self.get_variable_value(name.group(), var_type))) #(variable, value) 
 
         for val in values: 
-            script = script.replace(val[0], val[1], 1)
-            
-        script = script.replace("${{ ", "")
-        script = script.replace("}}", "")
-        print(script)
+            script = script.replace(val[0], val[1], 1) 
         return script 
-    
-    def get_variable_value(self, var_name):
+
+    def get_variable_value(self, string_to_expand, var_type): 
+        var_name = ""
+        if var_type == "template": 
+            var_name = re.findall('\.\S*?(?=\s|\})', string_to_expand)
+            var_name = var_name[0].replace(".", "") # findall returns a list so we only care about the first element 
+            print(var_name)
+
+        elif var_type == "macro": 
+            var_name = re.findall('\(([^)]*)\)', string_to_expand)
+            var_name = var_name[0].strip()
+            print(var_name)
         for pair in self.variables:
             if pair["name"] == var_name:
                 return pair["value"]
         return f"Could not find property variables.{var_name}"
         
 file = open("./input.yaml", "r")
-
-
 file = yaml.safe_load(file)
-
-print(file["variables"])
-
-# print(file["steps"][0].items())
 
 steps = list(file["steps"][0].items())
 
-# print(steps)
 
 
 inputFile = YamlFile(file["variables"], file["steps"])
