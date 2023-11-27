@@ -1,0 +1,18 @@
+variables:
+    - name: folderName
+      value: test
+    - name: fileName
+      value: output
+    - name: text
+      value: This is a test
+
+steps:
+    - script: |
+          mkdir ${{ variables.folderName }}
+          cd ${{ variables.folderName }}
+          pwd
+          touch ${{ variables.fileName }}
+      displayName: Create folder and file    
+    - script: |
+          cd ${{ variables.folderName }}
+          echo $(text) > $(fileName)
