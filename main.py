@@ -1,19 +1,34 @@
+import sys
 import yaml
 from typing import Tuple, List, Dict
 import os
 import re
+import subprocess
 
 class Job(): 
     def __init__(self, variables: List[Dict[str, str]], steps) -> None:
         self.variables = variables 
         self.steps = steps
 
+    def run_job(self): 
+        for step in self.steps: 
+            self.run_step(step)
+
     def run_step(self, step : Tuple[str, str]): 
-        if step[0] == "script":
-            instructions = step[1].strip().split("\n")
-            command = self.expand_variables(instructions[0])
-            # var = self.get_variable_value("one")
-            os.system(command.strip())
+        if "script" in step:
+            script = ""
+            instructions = step["script"].strip().split("\n")
+            for instruction in instructions: 
+                command = self.expand_variables(instruction)
+                script += str(command.strip()) + "\n"
+                # os.system(command.strip())
+            
+            subprocess.call(script, shell=True)
+
+        if "displayName" in step: 
+            print(step["displayName"])
+        else: 
+            return
 
     def expand_variables(self, script : str) -> str:
         template_syntax_pattern ='\$\{\{[^}]*\}\}' 
@@ -43,23 +58,32 @@ class Job():
         if var_type == "template": 
             var_name = re.findall('\.\S*?(?=\s|\})', string_to_expand)
             var_name = var_name[0].replace(".", "") # findall returns a list so we only care about the first element 
-
         elif var_type == "macro": 
             var_name = re.findall('\(([^)]*)\)', string_to_expand)
             var_name = var_name[0].strip()
+
         for pair in self.variables:
             if pair["name"] == var_name:
                 return pair["value"]
         return f"Could not find property variables.{var_name}"
         
-file = open("./input.yaml", "r")
-file = yaml.safe_load(file)
+def readYamlFile(path): 
+    try:
+        file = open(path, "r")
+        parsed_file = yaml.safe_load(file)
+    except: 
+        raise 
+    file.close()
+    return parsed_file 
+    
+if __name__ == "__main__":
+    try:
+        file = readYamlFile("./input.yaml")
+    except Exception as err: 
+        print(f"Unexpected {err=}, {type(err)=}")
+        sys.exit(0)
 
-steps = list(file["steps"][0].items())
+    steps = list(file["steps"][0].items())
+    inputFile = Job(file["variables"], file["steps"])
 
-
-
-inputFile = Job(file["variables"], file["steps"])
-
-inputFile.run_step(steps[0])
-
+    inputFile.run_job()
